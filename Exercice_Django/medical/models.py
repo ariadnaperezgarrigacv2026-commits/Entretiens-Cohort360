@@ -1,4 +1,8 @@
 from django.db import models
+from rest_framework.exceptions import ValidationError
+
+
+# OopCompanion:suppressRename
 
 
 class Patient(models.Model):
@@ -34,3 +38,43 @@ class Medication(models.Model):
 
     def __str__(self) -> str:  # pragma: no cover - simple repr
         return f"{self.code} - {self.label} ({self.status})"
+
+
+class Prescription(models.Model):
+    """Représente une prescription."""
+
+    STATUS_VALIDE = "valide"
+    STATUS_EN_ATTENTE = "en_attente"
+    STATUS_SUPPR = "suppr"
+    STATUS_CHOICES = (
+        (STATUS_VALIDE, "valide"),
+        (STATUS_EN_ATTENTE, "en_attente"),
+        (STATUS_SUPPR, "suppr"),
+    )
+
+    patient = models.ForeignKey(
+        "Patient",
+        on_delete=models.CASCADE,
+        related_name="prescriptions"
+    )
+    medication = models.ForeignKey(
+        "Medication",
+        on_delete=models.CASCADE,
+        related_name="prescriptions"
+    )
+    start_date = models.DateField()
+    end_date = models.DateField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_VALIDE)
+    comment = models.CharField(max_length=255, null=True, blank=True, default="")
+
+    def clean(self):
+        # End date cannot be before start date
+        if self.end_date < self.start_date:
+            raise ValidationError({"end_date": "End date cannot be before start date."})
+
+    class Meta:
+        ordering = ["patient"]
+
+    def __str__(self) -> str:  # pragma: no cover - simple repr
+        return f"{self.medication} for {self.patient} from {self.start_date} to {self.end_date} " \
+               f"- {self.status} {self.comment}"

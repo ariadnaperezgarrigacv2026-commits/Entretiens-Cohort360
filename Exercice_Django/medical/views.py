@@ -1,9 +1,12 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
-from .models import Patient, Medication
-from .filters import PatientFilter, MedicationFilter
-from .serializers import PatientSerializer, MedicationSerializer
+from .models import Patient, Medication, Prescription
+from .filters import PatientFilter, MedicationFilter, PrescriptionFilter
+from .serializers import PatientSerializer, MedicationSerializer, PrescriptionSerializer
+
+
+# OopCompanion:suppressRename
 
 
 class PatientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -22,3 +25,13 @@ class MedicationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Medication.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = MedicationFilter
+
+
+class PrescriptionViewSet(viewsets.ModelViewSet):
+    """Permettre de créer, consulter et mettre à jour des prescriptions."""
+
+    serializer_class = PrescriptionSerializer
+    queryset = Prescription.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PrescriptionFilter
+

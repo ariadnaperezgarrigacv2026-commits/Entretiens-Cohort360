@@ -4,7 +4,10 @@ from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 
-from medical.models import Patient, Medication
+from medical.models import Patient, Medication, Prescription
+
+
+# OopCompanion:suppressRename
 
 
 def random_date(start_year=1940, end_year=2025):
@@ -17,15 +20,18 @@ def random_date(start_year=1940, end_year=2025):
 class Command(BaseCommand):
     Patient.objects.all().delete()
     Medication.objects.all().delete()
-    help = "Seed the database with demo Patients and Medications"
+    Prescription.objects.all().delete()
+    help = "Seed the database with demo Patients and Medications and Prescriptions"
 
     def add_arguments(self, parser):
         parser.add_argument("--patients", type=int, default=10)
         parser.add_argument("--medications", type=int, default=5)
+        parser.add_argument("--prescriptions", type=int, default=30)
 
     def handle(self, *args, **options):
         n_patients = options["patients"]
         n_meds = options["medications"]
+        n_prescriptions = options["prescriptions"]
 
         last_names = [
             "Martin", "Bernard", "Thomas", "Petit", "Robert",
@@ -86,6 +92,24 @@ class Command(BaseCommand):
             m = Medication.objects.create(code=code, label=label, status=status)
             created_meds.append(m)
 
+        created_prescriptions = []
+
+        for i in range(n_prescriptions):
+            patient = random.choice(created_patients)
+            medication = random.choice(created_meds)
+            status = random.choices(
+                [Prescription.STATUS_VALIDE, Prescription.STATUS_EN_ATTENTE, Prescription.STATUS_SUPPR],
+                weights=[0.7, 0.1, 0.1],
+                k=1
+            )[0]
+            start_date = random_date(2022, 2026)
+            end_date = start_date + timedelta(days=random.randint(1, 100))
+            comment = f"Demo comment {i + 1}" if random.random() < 0.7 else ""
+            pr = Prescription.objects.create(patient=patient, medication=medication, status=status,
+                                             start_date=start_date, end_date=end_date, comment=comment)
+            created_prescriptions.append(pr)
+
         self.stdout.write(self.style.SUCCESS(
-            f"Created {len(created_patients)} patients and {len(created_meds)} medications."
+            f"Created {len(created_patients)} patients, {len(created_meds)} medications "
+            f"and {len(created_prescriptions)} prescriptions."
         ))

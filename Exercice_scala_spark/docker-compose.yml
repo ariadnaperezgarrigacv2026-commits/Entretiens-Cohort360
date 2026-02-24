@@ -11,4 +11,5 @@ services:
       - ./init_solr.sh:/docker-entrypoint-initdb.d/init_solr.sh
     environment:
       - SOLR_JAVA_MEM=-Xms512m -Xmx512m
+      - SOLR_HOST=localhost
     command: solr-foreground -c
